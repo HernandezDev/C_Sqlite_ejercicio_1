@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "-g",
+                "-finput-charset=UTF-8", // para programas de consola
+                "-fexec-charset=CP850",  // para programas de consola
+                "-I", "C:/msys64/mingw64/include",
+                "-L", "C:/msys64/mingw64/lib",
+                "main.c",
+                "-o",
+                "main.exe",
+                "-liconv",
+                "-lcharset",
+                "-lsqlite3"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "${workspaceFolder}/main.exe",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
+    ]
+}
