@@ -14,8 +14,6 @@
                 "main.c",
                 "-o",
                 "main.exe",
-                "-liconv",
-                "-lcharset",
                 "-lsqlite3"
             ],
             "group": {

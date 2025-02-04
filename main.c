@@ -1,54 +1,22 @@
 #include<stdio.h>
-#include<stdlib.h>
-#include<libcharset.h>
-#include<iconv.h>
-#include<string.h>
 #include<sqlite3.h>
 
-void convert_encoding(const char *input, char *output, const char *from_encoding, const char *to_encoding);
+
 void insert_into_database(int id, const char *nombre);
 
 int main() {
     char input[50];
-    char output[100];
-    const char *encoding = locale_charset();
     int id;
-    
     printf("Enter the id: ");
     scanf("%d", &id);
-    printf("Enter the string %s: ", encoding);
+    printf("Enter the string: ");
     scanf("%s", input);
-    
-    convert_encoding(input, output, encoding, "UTF-8");
-    insert_into_database(id, output);
+    insert_into_database(id, input);
     
     return 0;
 }
 
-void convert_encoding(const char *input, char *output, const char *from_encoding, const char *to_encoding) {
-    iconv_t cd = iconv_open(to_encoding, from_encoding);
-    if (cd == (iconv_t)-1) {
-        perror("iconv_open");
-        return;
-    }
 
-    size_t inbytesleft = strlen(input);
-    size_t outbytesleft = inbytesleft * 2; // Allocate more space for the output buffer
-    char *inbuf = (char *)input;
-    char *outbuf = output;
-    memset(output, 0, outbytesleft);
-
-    if (iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft) == (size_t)-1) {
-        perror("iconv");
-        iconv_close(cd);
-        return;
-    }
-
-    // Ensure the output string is null-terminated
-    *outbuf = '\0';
-
-    iconv_close(cd);
-}
 
 void insert_into_database(int id, const char *nombre) {
     sqlite3 *db;
