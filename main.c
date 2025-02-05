@@ -1,27 +1,87 @@
 #include<stdio.h>
+#include<stdbool.h>
 #include<sqlite3.h>
 
-
-void insert_into_database(int id, const char *nombre);
+int menu();
+void insert_into_database();
 
 int main() {
-    char input[50];
-    int id;
-    printf("Enter the id: ");
-    scanf("%d", &id);
-    printf("Enter the string: ");
-    scanf("%s", input);
-    insert_into_database(id, input);
+    bool salir = false;
+    int opcion;
+    while (!salir)
+    {
+        opcion = menu();
+        switch (opcion)
+        {
+        case 1:
+            insert_into_database();
+            break;
+        case 2:
+            /* code */
+            break;
+        case 3:
+            /* code */
+            break;
+        case 4:
+            /* code */
+            break;
+        case 5:
+            /* code */
+            break;
+        case 6:
+            /* code */
+            break;
+        case 7:
+            /* code */
+            break;
+        case 8:
+            salir = true;
+            break;
+        default:
+            printf("Opción no válida\n");
+            break;
+        }
+        
+    }
     
     return 0;
 }
 
+int menu()
+{
+    int opcion;
+    printf("1. Registrar notas de un alumno\n");
+    printf("2. Mostrar notas y promedio de alumno\n");
+    printf("3. Mejor y Peor promedio\n");
+    printf("4. Editar notas de un alumno\n");
+    printf("5. Editar nombre de un alumno\n");
+    printf("6. Eliminar Alumno\n");
+    printf("7. Guardar en archivo .CSV\n");
+    printf("8. Salir del programa\n");
+    printf("Elije opcion: ");
+    if(scanf("%d", &opcion)!=1)
+    {
+        printf("Entrada no válida. Por favor, ingrese un número\n");
+        // Limpiar el buffer de entrada
+        while (getchar() != '\n');
+        // Volver a pedir el número
+        opcion = menu();
+    }
+    return opcion;
+}
 
-
-void insert_into_database(int id, const char *nombre) {
+void insert_into_database()
+{
+    int id;
+    char nombre[50];
     sqlite3 *db;
     char *err_msg = 0;
 
+    printf("Enter the id: ");
+    scanf("%d", &id);
+    printf("Enter the string: ");
+    scanf("%s", nombre);
+    
     int rc = sqlite3_open("test.db", &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
