@@ -10,8 +10,7 @@ int main() {
     int opcion;
     while (!salir)
     {
-        opcion = menu();
-        switch (opcion)
+        switch (opcion = menu())
         {
         case 1:
             insert_into_database();
@@ -89,7 +88,7 @@ void insert_into_database()
         return;
     }
 
-    char *sql_create = "CREATE TABLE IF NOT EXISTS Strings(Id INTEGER PRIMARY KEY, Nombre TEXT);";
+    char *sql_create = "CREATE TABLE IF NOT EXISTS Strings(Id INTEGER PRIMARY KEY AUTOINCREMENT, Nombre TEXT);";
     rc = sqlite3_exec(db, sql_create, 0, 0, &err_msg);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "SQL error (create table): %s\n", err_msg);
@@ -98,7 +97,7 @@ void insert_into_database()
         return;
     }
 
-    char *sql_insert = "INSERT INTO Strings(Id, Nombre) VALUES(?, ?);";
+    char *sql_insert = "INSERT INTO Strings(Nombre) VALUES(?);";
     sqlite3_stmt *stmt;
     rc = sqlite3_prepare_v2(db, sql_insert, -1, &stmt, 0);
     if (rc != SQLITE_OK) {
@@ -107,8 +106,8 @@ void insert_into_database()
         return;
     }
 
-    sqlite3_bind_int(stmt, 1, id);
-    sqlite3_bind_text(stmt, 2, nombre, -1, SQLITE_STATIC);
+    
+    sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
 
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
