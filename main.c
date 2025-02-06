@@ -4,12 +4,13 @@
 #include<sqlite3.h>
 
 int menu();
+int MenuEditar();
 
 float CargarNota();
 void CargarAlumno();
 void MostrarAlumno();
 void MejorPeor();
-void EditarNota();
+void EditarAlumno();
 
 int main() {
     bool salir = false;
@@ -30,7 +31,7 @@ int main() {
             MejorPeor();
             break;
         case 4:
-            /* code */
+            EditarAlumno();
             break;
         case 5:
             /* code */
@@ -39,9 +40,6 @@ int main() {
             /* code */
             break;
         case 7:
-            /* code */
-            break;
-        case 8:
             salir = true;
             break;
         default:
@@ -67,11 +65,10 @@ int menu()
     printf("1. Registrar notas de un alumno\n");
     printf("2. Mostrar notas y promedio de alumno\n");
     printf("3. Mejor y Peor promedio\n");
-    printf("4. Editar notas de un alumno\n");
-    printf("5. Editar nombre de un alumno\n");
-    printf("6. Eliminar Alumno\n");
-    printf("7. Guardar en archivo .CSV\n");
-    printf("8. Salir del programa\n");
+    printf("4. Editar  un alumno\n");    
+    printf("5. Eliminar Alumno\n");
+    printf("6. Guardar en archivo .CSV\n");
+    printf("7. Salir del programa\n");
     printf("Elije opción: ");
     if(scanf("%d", &opcion)!=1)
     {
@@ -80,6 +77,20 @@ int menu()
         while (getchar() != '\n');
         // Volver a pedir el número
         opcion = menu();
+    }
+    return opcion;
+}
+
+int MenuEditar()
+{
+    int opcion;
+    if(scanf("%d", &opcion)!=1 ||opcion > 1 || opcion > 4)
+    {
+        printf("Entrada no válida. Por favor, ingrese un número\n");
+        // Limpiar el buffer de entrada
+        while (getchar() != '\n');
+        // Volver a pedir el número
+        opcion = MenuEditar();
     }
     return opcion;
 }
@@ -131,16 +142,28 @@ void CargarAlumno()
         sqlite3_close(db);
         return;
     }
-    // Crea el trigger si no existe
-    char *sql_trigger = "CREATE TRIGGER IF NOT EXISTS ActualizarPromedio AFTER INSERT ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
-    rc = sqlite3_exec(db, sql_trigger, 0, 0, &err_msg);
+
+    // Crea el trigger de inserción si no existe
+    char *sql_trigger_insert = "CREATE TRIGGER ActualizarPromedio_Insert AFTER INSERT ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
+    rc = sqlite3_exec(db, sql_trigger_insert, 0, 0, &err_msg);
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "Error de SQL (crear trigger): %s\n", err_msg);
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-        return;
+    fprintf(stderr, "Error de SQL (crear trigger de inserción): %s\n", err_msg);
+    sqlite3_free(err_msg);
+    sqlite3_close(db);
+    return;
     }
+    // Crea el trigger de actualización si no existe
+    char *sql_trigger_update = "CREATE TRIGGER ActualizarPromedio_Update AFTER UPDATE ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
+    rc = sqlite3_exec(db, sql_trigger_update, 0, 0, &err_msg);
+    if (rc != SQLITE_OK) 
+    {
+    fprintf(stderr, "Error de SQL (crear trigger de actualización): %s\n", err_msg);
+    sqlite3_free(err_msg);
+    sqlite3_close(db);
+    return;
+    }
+
     // Prepara la sentencia SQL
     char *sql_insert = "INSERT INTO Alumnos(Nombre, Lengua, Matematicas, Ciencias) VALUES(?, ?, ?, ?);";
     sqlite3_stmt *stmt;
@@ -254,10 +277,12 @@ void MejorPeor()
     sqlite3_close(db);
 }
 
-void EditarNota()
+void EditarAlumno()
 {
     sqlite3 *db;
     sqlite3_stmt *stmt;
+    char Nombre[50];
+    int id = 0;
     // Abre la base de datos
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
@@ -266,5 +291,120 @@ void EditarNota()
         sqlite3_close(db);
         return;
     }
-   
+    // Pedir el nombre a buscar
+    printf("Nombre: ");
+    scanf("%s", Nombre);
+    // Prepara la sentencia
+    char *sql_select = "SELECT id FROM Alumnos WHERE Nombre = ?;";
+    rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    // Enlaza los valores y verifica que no sean NULL
+    sqlite3_bind_text(stmt, 1, Nombre, -1, SQLITE_STATIC);
+    // Ejecuta la sentencia
+    if ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
+    {
+        id = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+    //Comprobar si el alumno existe
+    if(id == 0)
+    {
+        printf("El alumno no existe\n");
+        sqlite3_close(db);
+        return;
+    }
+    // Pedir la Elemento a editar
+    printf("Editar: 1. Nombre 2. Lengua 3. Matemáticas 4. Ciencias\n");
+    int opcion = MenuEditar(); // Asegúrate de que esta función existe y funciona correctamente
+    char *sql_update;
+    float nuevaNota;
+
+    switch (opcion)
+    {
+        case 1:
+            // Nuevo nombre
+            char NuevoNombre[50];
+            printf("Nuevo nombre: ");
+            scanf("%s", NuevoNombre);
+            // Prepara la sentencia
+            sql_update = "UPDATE Alumnos SET Nombre = ? WHERE id = ?;";
+            rc = sqlite3_prepare_v2(db, sql_update, -1, &stmt, 0);
+            if (rc != SQLITE_OK) 
+            {
+                fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+                sqlite3_close(db);
+                return;
+            }
+            // Enlaza los valores y verifica que no sean NULL
+            sqlite3_bind_text(stmt, 1, NuevoNombre, -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 2, id);
+            break;
+        case 2:
+            // Nueva nota de Lengua
+            printf("Nueva nota de Lengua: ");
+            nuevaNota = CargarNota();
+            sql_update = "UPDATE Alumnos SET Lengua = ? WHERE id = ?;";
+            rc = sqlite3_prepare_v2(db, sql_update, -1, &stmt, 0);
+            if (rc != SQLITE_OK) 
+            {
+                fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+                sqlite3_close(db);
+                return;
+            }
+            sqlite3_bind_double(stmt, 1, nuevaNota);
+            sqlite3_bind_int(stmt, 2, id);
+            break;
+        case 3:
+            // Nueva nota de Matemáticas
+            printf("Nueva nota de Matemáticas: ");
+            nuevaNota = CargarNota();
+            sql_update = "UPDATE Alumnos SET Matematicas = ? WHERE id = ?;";
+            rc = sqlite3_prepare_v2(db, sql_update, -1, &stmt, 0);
+            if (rc != SQLITE_OK) 
+            {
+                fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+                sqlite3_close(db);
+                return;
+            }
+            sqlite3_bind_double(stmt, 1, nuevaNota);
+            sqlite3_bind_int(stmt, 2, id);
+            break;
+        case 4:
+            // Nueva nota de Ciencias
+            printf("Nueva nota de Ciencias: ");
+            nuevaNota = CargarNota();
+            sql_update = "UPDATE Alumnos SET Ciencias = ? WHERE id = ?;";
+            rc = sqlite3_prepare_v2(db, sql_update, -1, &stmt, 0);
+            if (rc != SQLITE_OK) 
+            {
+                fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+                sqlite3_close(db);
+                return;
+            }
+            sqlite3_bind_double(stmt, 1, nuevaNota);
+            sqlite3_bind_int(stmt, 2, id);
+            break;
+        default:
+            printf("Opción no válida\n");
+            sqlite3_close(db);
+            return;
+    }
+
+    // Ejecuta la sentencia de actualización
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) 
+    {
+        fprintf(stderr, "Ejecución fallida: %s\n", sqlite3_errmsg(db));
+    } else 
+    {
+        printf("Registro actualizado exitosamente\n");
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
 }
+
