@@ -84,7 +84,7 @@ int menu()
 int MenuEditar()
 {
     int opcion;
-    if(scanf("%d", &opcion)!=1 ||opcion > 1 || opcion > 4)
+    if(scanf("%d", &opcion)!=1 ||opcion < 1 || opcion > 4)
     {
         printf("Entrada no válida. Por favor, ingrese un número\n");
         // Limpiar el buffer de entrada
@@ -389,10 +389,7 @@ void EditarAlumno()
             sqlite3_bind_double(stmt, 1, nuevaNota);
             sqlite3_bind_int(stmt, 2, id);
             break;
-        default:
-            printf("Opción no válida\n");
-            sqlite3_close(db);
-            return;
+        
     }
 
     // Ejecuta la sentencia de actualización
