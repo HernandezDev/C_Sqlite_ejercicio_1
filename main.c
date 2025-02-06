@@ -9,6 +9,7 @@ float CargarNota();
 void CargarAlumno();
 void MostrarAlumno();
 void MejorPeor();
+void EditarNota();
 
 int main() {
     bool salir = false;
@@ -16,7 +17,8 @@ int main() {
     char respuesta[2];
     while (!salir)
     {
-        switch (opcion = menu())
+        opcion = menu();
+        switch (opcion)
         {
         case 1:
             CargarAlumno();
@@ -41,16 +43,19 @@ int main() {
             break;
         case 8:
             salir = true;
-            continue; //salta al principio del bucle while
+            break;
         default:
             printf("Opción no válida\n");
             break;
         }
-        printf("¿Otra acción? (s/n): ");
-        scanf("%s", respuesta);
-        if (strcmp(respuesta, "n") == 0)
+        if (!salir)
         {
-            salir = true;
+            printf("¿Otra acción? (s/n): ");
+            scanf("%s", respuesta);
+            if (strcmp(respuesta, "n") == 0)
+            {
+                salir = true;
+            }
         }
     }
     return 0;
@@ -247,4 +252,19 @@ void MejorPeor()
     }
     sqlite3_finalize(stmt);
     sqlite3_close(db);
+}
+
+void EditarNota()
+{
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    // Abre la base de datos
+    int rc = sqlite3_open("Registro.db", &db);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+   
 }
