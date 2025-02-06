@@ -8,6 +8,7 @@ int menu();
 float CargarNota();
 void CargarAlumno();
 void MostrarAlumno();
+void MejorPeor();
 
 int main() {
     bool salir = false;
@@ -24,7 +25,7 @@ int main() {
             MostrarAlumno();
             break;
         case 3:
-            /* code */
+            MejorPeor();
             break;
         case 4:
             /* code */
@@ -45,7 +46,7 @@ int main() {
             printf("Opción no válida\n");
             break;
         }
-        printf("otra accion? (s/n): ");
+        printf("¿Otra acción? (s/n): ");
         scanf("%s", respuesta);
         if (strcmp(respuesta, "n") == 0)
         {
@@ -66,7 +67,7 @@ int menu()
     printf("6. Eliminar Alumno\n");
     printf("7. Guardar en archivo .CSV\n");
     printf("8. Salir del programa\n");
-    printf("Elije opcion: ");
+    printf("Elije opción: ");
     if(scanf("%d", &opcion)!=1)
     {
         printf("Entrada no válida. Por favor, ingrese un número\n");
@@ -83,7 +84,7 @@ float CargarNota()
     float Nota;
     if(scanf("%f", &Nota)!=1||Nota<1||Nota>10)
     {
-        printf("Entrada no válida. Por favor, ingrese un número valido\n");
+        printf("Entrada no válida. Por favor, ingrese un número válido\n");
         // Limpiar el buffer de entrada
         while (getchar() != '\n');
         // Volver a pedir el número
@@ -111,7 +112,7 @@ void CargarAlumno()
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
@@ -120,7 +121,7 @@ void CargarAlumno()
     rc = sqlite3_exec(db, sql_create, 0, 0, &err_msg);
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "SQL error (create table): %s\n", err_msg);
+        fprintf(stderr, "Error de SQL (crear tabla): %s\n", err_msg);
         sqlite3_free(err_msg);
         sqlite3_close(db);
         return;
@@ -130,7 +131,7 @@ void CargarAlumno()
     rc = sqlite3_exec(db, sql_trigger, 0, 0, &err_msg);
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "SQL error (create trigger): %s\n", err_msg);
+        fprintf(stderr, "Error de SQL (crear trigger): %s\n", err_msg);
         sqlite3_free(err_msg);
         sqlite3_close(db);
         return;
@@ -141,7 +142,7 @@ void CargarAlumno()
     rc = sqlite3_prepare_v2(db, sql_insert, -1, &stmt, 0);
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
@@ -154,10 +155,10 @@ void CargarAlumno()
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) 
     {
-        fprintf(stderr, "Execution failed: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "Ejecución fallida: %s\n", sqlite3_errmsg(db));
     } else 
     {
-        printf("Record inserted successfully\n");
+        printf("Registro insertado exitosamente\n");
     }
 
     sqlite3_finalize(stmt);
@@ -172,7 +173,7 @@ void MostrarAlumno()
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
@@ -181,7 +182,7 @@ void MostrarAlumno()
     rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
     if (rc != SQLITE_OK) 
     {
-        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
@@ -202,4 +203,49 @@ void MostrarAlumno()
         printf("Promedio: %.2f\n", sqlite3_column_double(stmt, 5));
         printf("\n");
     }
+}
+
+void MejorPeor()
+{
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    // Abre la base de datos
+    int rc = sqlite3_open("Registro.db", &db);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    // Prepara la sentencia
+    char *sql_select = "SELECT Nombre, Promedio FROM Alumnos WHERE Promedio = (SELECT MAX(Promedio) FROM Alumnos)";
+    rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    // Ejecuta la sentencia
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
+    {
+        printf("Mejor promedio: %s %.2f\n", sqlite3_column_text(stmt, 0), sqlite3_column_double(stmt, 1));
+    } 
+    sqlite3_finalize(stmt);
+    // Prepara la sentencia
+    sql_select = "SELECT Nombre, Promedio FROM Alumnos WHERE Promedio = (SELECT MIN(Promedio) FROM Alumnos)";
+    rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    // Ejecuta la sentencia
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
+    {
+        printf("Peor promedio: %s %.2f\n", sqlite3_column_text(stmt, 0), sqlite3_column_double(stmt, 1));
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
 }
