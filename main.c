@@ -45,16 +45,13 @@ int main() {
             printf("Opción no válida\n");
             break;
         }
-        
         printf("otra accion? (s/n): ");
         scanf("%s", respuesta);
         if (strcmp(respuesta, "n") == 0)
         {
             salir = true;
         }
-        
     }
-    
     return 0;
 }
 
@@ -101,7 +98,6 @@ void CargarAlumno()
     char nombre[50];
     sqlite3 *db;
     char *err_msg = 0;
-
     // Solicita los datos del alumno
     printf("Nombre: ");
     scanf("%s", nombre);
@@ -111,7 +107,6 @@ void CargarAlumno()
     float matematicas = CargarNota();
     printf("Ciencias: ");
     float ciencias = CargarNota();
-
     // Abre la base de datos
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
@@ -120,7 +115,6 @@ void CargarAlumno()
         sqlite3_close(db);
         return;
     }
-
     // Crea la tabla si no existe
     char *sql_create = "CREATE TABLE IF NOT EXISTS Alumnos(Id INTEGER PRIMARY KEY AUTOINCREMENT, Nombre TEXT, Lengua REAL, Matematicas REAL, Ciencias REAL, Promedio REAL);";
     rc = sqlite3_exec(db, sql_create, 0, 0, &err_msg);
@@ -131,7 +125,6 @@ void CargarAlumno()
         sqlite3_close(db);
         return;
     }
-
     // Crea el trigger si no existe
     char *sql_trigger = "CREATE TRIGGER IF NOT EXISTS ActualizarPromedio AFTER INSERT ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
     rc = sqlite3_exec(db, sql_trigger, 0, 0, &err_msg);
@@ -142,7 +135,6 @@ void CargarAlumno()
         sqlite3_close(db);
         return;
     }
-
     // Prepara la sentencia SQL
     char *sql_insert = "INSERT INTO Alumnos(Nombre, Lengua, Matematicas, Ciencias) VALUES(?, ?, ?, ?);";
     sqlite3_stmt *stmt;
@@ -153,13 +145,11 @@ void CargarAlumno()
         sqlite3_close(db);
         return;
     }
-
     // Enlaza los valores y verifica que no sean NULL
     sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
     sqlite3_bind_double(stmt, 2, lengua);
     sqlite3_bind_double(stmt, 3, matematicas);
     sqlite3_bind_double(stmt, 4, ciencias);
-
     // Ejecuta la sentencia
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) 
@@ -195,15 +185,12 @@ void MostrarAlumno()
         sqlite3_close(db);
         return;
     }
-
     // Solicita el nombre del alumno
     char nombre[50];
     printf("Nombre: ");
     scanf("%s", nombre);
-
     // Enlaza los valores y verifica que no sean NULL
     sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
-
     // Ejecuta la sentencia
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
     {
