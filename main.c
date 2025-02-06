@@ -40,7 +40,7 @@ int main() {
             break;
         case 8:
             salir = true;
-            continue;
+            continue; //salta al principio del bucle while
         default:
             printf("Opción no válida\n");
             break;
