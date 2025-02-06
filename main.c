@@ -3,7 +3,8 @@
 #include<sqlite3.h>
 
 int menu();
-void insert_into_database();
+float CargarNota();
+void CargarAlumno();
 
 int main() {
     bool salir = false;
@@ -13,7 +14,7 @@ int main() {
         switch (opcion = menu())
         {
         case 1:
-            insert_into_database();
+            CargarAlumno();
             break;
         case 2:
             /* code */
@@ -69,50 +70,86 @@ int menu()
     return opcion;
 }
 
-void insert_into_database()
+float CargarNota()
+{
+    float Nota;
+    if(scanf("%f", &Nota)!=1||Nota<1||Nota>10)
+    {
+        printf("Entrada no válida. Por favor, ingrese un número valido\n");
+        // Limpiar el buffer de entrada
+        while (getchar() != '\n');
+        // Volver a pedir el número
+        Nota = CargarNota();
+    }
+    return Nota;
+}
+
+void CargarAlumno()
 {
     int id;
     char nombre[50];
     sqlite3 *db;
     char *err_msg = 0;
 
-    printf("Enter the id: ");
-    scanf("%d", &id);
-    printf("Enter the string: ");
+    printf("Nombre: ");
     scanf("%s", nombre);
-    
-    int rc = sqlite3_open("test.db", &db);
-    if (rc != SQLITE_OK) {
+    printf("Lengua: ");
+    float lengua = CargarNota();
+    printf("Matemáticas: ");
+    float matematicas = CargarNota();
+    printf("Ciencias: ");
+    float ciencias = CargarNota();
+
+    int rc = sqlite3_open("Registro.db", &db);
+    if (rc != SQLITE_OK) 
+    {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
 
-    char *sql_create = "CREATE TABLE IF NOT EXISTS Strings(Id INTEGER PRIMARY KEY AUTOINCREMENT, Nombre TEXT);";
+    char *sql_create = "CREATE TABLE IF NOT EXISTS Alumnos(Id INTEGER PRIMARY KEY AUTOINCREMENT, Nombre TEXT, Lengua REAL, Matematicas REAL, Ciencias REAL, Promedio REAL);";
     rc = sqlite3_exec(db, sql_create, 0, 0, &err_msg);
-    if (rc != SQLITE_OK) {
+    if (rc != SQLITE_OK) 
+    {
         fprintf(stderr, "SQL error (create table): %s\n", err_msg);
         sqlite3_free(err_msg);
         sqlite3_close(db);
         return;
     }
 
-    char *sql_insert = "INSERT INTO Strings(Nombre) VALUES(?);";
+    char *sql_trigger = "CREATE TRIGGER IF NOT EXISTS ActualizarPromedio AFTER INSERT ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
+    rc = sqlite3_exec(db, sql_trigger, 0, 0, &err_msg);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "SQL error (create trigger): %s\n", err_msg);
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+        return;
+    }
+
+    char *sql_insert = "INSERT INTO Alumnos(Nombre, Lengua, Matematicas, Ciencias) VALUES(?, ?, ?, ?);";
     sqlite3_stmt *stmt;
     rc = sqlite3_prepare_v2(db, sql_insert, -1, &stmt, 0);
-    if (rc != SQLITE_OK) {
+    if (rc != SQLITE_OK) 
+    {
         fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
 
-    
+    // Enlaza los valores y verifica que no sean NULL
     sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
+    sqlite3_bind_double(stmt, 2, lengua);
+    sqlite3_bind_double(stmt, 3, matematicas);
+    sqlite3_bind_double(stmt, 4, ciencias);
 
     rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
+    if (rc != SQLITE_DONE) 
+    {
         fprintf(stderr, "Execution failed: %s\n", sqlite3_errmsg(db));
-    } else {
+    } else 
+    {
         printf("Record inserted successfully\n");
     }
 
