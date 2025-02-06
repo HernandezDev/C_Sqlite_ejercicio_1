@@ -1,14 +1,18 @@
 #include<stdio.h>
 #include<stdbool.h>
+#include<string.h>
 #include<sqlite3.h>
 
 int menu();
+
 float CargarNota();
 void CargarAlumno();
+void MostrarAlumno();
 
 int main() {
     bool salir = false;
     int opcion;
+    char respuesta[2];
     while (!salir)
     {
         switch (opcion = menu())
@@ -17,7 +21,7 @@ int main() {
             CargarAlumno();
             break;
         case 2:
-            /* code */
+            MostrarAlumno();
             break;
         case 3:
             /* code */
@@ -36,10 +40,17 @@ int main() {
             break;
         case 8:
             salir = true;
-            break;
+            continue;
         default:
             printf("Opción no válida\n");
             break;
+        }
+        
+        printf("otra accion? (s/n): ");
+        scanf("%s", respuesta);
+        if (strcmp(respuesta, "n") == 0)
+        {
+            salir = true;
         }
         
     }
@@ -91,6 +102,7 @@ void CargarAlumno()
     sqlite3 *db;
     char *err_msg = 0;
 
+    // Solicita los datos del alumno
     printf("Nombre: ");
     scanf("%s", nombre);
     printf("Lengua: ");
@@ -160,4 +172,47 @@ void CargarAlumno()
 
     sqlite3_finalize(stmt);
     sqlite3_close(db);
+}
+
+void MostrarAlumno()
+{
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    // Abre la base de datos
+    int rc = sqlite3_open("Registro.db", &db);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    // Prepara la sentencia SQL
+    char *sql_select = "SELECT * FROM Alumnos WHERE Nombre like ?;";
+    rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    // Solicita el nombre del alumno
+    char nombre[50];
+    printf("Nombre: ");
+    scanf("%s", nombre);
+
+    // Enlaza los valores y verifica que no sean NULL
+    sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
+
+    // Ejecuta la sentencia
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
+    {
+        printf("Id: %d\n", sqlite3_column_int(stmt, 0));
+        printf("Nombre: %s\n", sqlite3_column_text(stmt, 1));
+        printf("Lengua: %.2f\n", sqlite3_column_double(stmt, 2));
+        printf("Matemáticas: %.2f\n", sqlite3_column_double(stmt, 3));
+        printf("Ciencias: %.2f\n", sqlite3_column_double(stmt, 4));
+        printf("Promedio: %.2f\n", sqlite3_column_double(stmt, 5));
+        printf("\n");
+    }
 }
