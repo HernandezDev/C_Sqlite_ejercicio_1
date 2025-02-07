@@ -1,2 +1,3 @@
 *.db
-
+libjson-c-5.dll
+*.json

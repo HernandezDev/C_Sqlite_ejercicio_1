@@ -3,6 +3,7 @@
 #include<string.h>
 #include<sqlite3.h>
 
+
 int menu();
 int MenuEditar();
 void IniciarBase();
@@ -12,6 +13,7 @@ void MostrarAlumno();
 void MejorPeor();
 void EditarAlumno();
 void BorrarAlumno();
+void ExportAlumnos();
 
 int main() {
     bool salir = false;
@@ -39,7 +41,7 @@ int main() {
             BorrarAlumno();
             break;
         case 6:
-            /* code */
+            ExportAlumnos();
             break;
         case 7:
             salir = true;
@@ -69,7 +71,7 @@ int menu()
     printf("3. Mejor y Peor promedio\n");
     printf("4. Editar  un alumno\n");    
     printf("5. Eliminar Alumno\n");
-    printf("6. Guardar en archivo .CSV\n");
+    printf("6. Guardar en archivo .json\n");
     printf("7. Salir del programa\n");
     printf("Elije opción: ");
     if(scanf("%d", &opcion)!=1)
@@ -489,4 +491,50 @@ void BorrarAlumno()
     sqlite3_close(db);
 
 
+}
+
+void ExportAlumnos()
+{
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    FILE *fp;
+    char *err_msg = 0;
+    const char *sql = "SELECT json_group_array(json_object('Id', Id, 'Nombre', Nombre, 'Lengua', Lengua, 'Matematicas', Matematicas, 'Ciencias', Ciencias, 'Promedio', Promedio)) FROM Alumnos";
+
+    // Abre la base de datos
+    if (sqlite3_open("Registro.db", &db))
+    {
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    // Prepara la consulta SQL
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) != SQLITE_OK)
+    {
+        fprintf(stderr, "Error al preparar la consulta SQL: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    // Abre el archivo de salida
+    fp = fopen("Alumnos.json", "w");
+    if (!fp)
+    {
+        fprintf(stderr, "No se puede abrir el archivo: Alumnos.json\n");
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    // Ejecuta la consulta y escribe los datos en el archivo
+    if (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        const char *json_data = (const char *)sqlite3_column_text(stmt, 0);
+        fprintf(fp, "%s\n", json_data ? json_data : "[]");
+    }
+
+    // Limpia y cierra
+    sqlite3_finalize(stmt);
+    fclose(fp);
+    sqlite3_close(db);
 }
