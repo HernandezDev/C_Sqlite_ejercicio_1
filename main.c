@@ -5,12 +5,12 @@
 
 int menu();
 int MenuEditar();
-
 float CargarNota();
 void CargarAlumno();
 void MostrarAlumno();
 void MejorPeor();
 void EditarAlumno();
+void BorrarAlumno();
 
 int main() {
     bool salir = false;
@@ -34,7 +34,7 @@ int main() {
             EditarAlumno();
             break;
         case 5:
-            /* code */
+            BorrarAlumno();
             break;
         case 6:
             /* code */
@@ -50,7 +50,7 @@ int main() {
         {
             printf("¿Otra acción? (s/n): ");
             scanf("%s", respuesta);
-            if (strcmp(respuesta, "n") == 0)
+            if (strcasecmp(respuesta, "n") == 0)
             {
                 salir = true;
             }
@@ -144,7 +144,7 @@ void CargarAlumno()
     }
 
     // Crea el trigger de inserción si no existe
-    char *sql_trigger_insert = "CREATE TRIGGER ActualizarPromedio_Insert AFTER INSERT ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
+    char *sql_trigger_insert = "CREATE TRIGGER IF NOT EXISTS ActualizarPromedio_Insert AFTER INSERT ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
     rc = sqlite3_exec(db, sql_trigger_insert, 0, 0, &err_msg);
     if (rc != SQLITE_OK) 
     {
@@ -154,7 +154,7 @@ void CargarAlumno()
     return;
     }
     // Crea el trigger de actualización si no existe
-    char *sql_trigger_update = "CREATE TRIGGER ActualizarPromedio_Update AFTER UPDATE ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
+    char *sql_trigger_update = "CREATE TRIGGER IF NOT EXISTS ActualizarPromedio_Update AFTER UPDATE ON Alumnos BEGIN UPDATE Alumnos SET Promedio = (Lengua + Matematicas + Ciencias) / 3 WHERE rowid = new.rowid; END;";
     rc = sqlite3_exec(db, sql_trigger_update, 0, 0, &err_msg);
     if (rc != SQLITE_OK) 
     {
@@ -320,7 +320,7 @@ void EditarAlumno()
     }
     // Pedir la Elemento a editar
     printf("Editar: 1. Nombre 2. Lengua 3. Matemáticas 4. Ciencias\n");
-    int opcion = MenuEditar(); // Asegúrate de que esta función existe y funciona correctamente
+    int opcion = MenuEditar(); 
     char *sql_update;
     float nuevaNota;
 
@@ -405,3 +405,69 @@ void EditarAlumno()
     sqlite3_close(db);
 }
 
+void BorrarAlumno()
+{
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    char Nombre[50];
+    int id = 0;
+    // Abre la base de datos
+    int rc = sqlite3_open("Registro.db", &db);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    // Pedir el nombre a buscar
+    printf("Nombre: ");
+    scanf("%s", Nombre);
+    // Prepara la sentencia
+    char *sql_select = "SELECT id FROM Alumnos WHERE Nombre = ?;";
+    rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    // Enlaza los valores y verifica que no sean NULL
+    sqlite3_bind_text(stmt, 1, Nombre, -1, SQLITE_STATIC);
+    // Ejecuta la sentencia
+    if ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
+    {
+        id = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+    //Comprobar si el alumno existe
+    if(id == 0)
+    {
+        printf("El alumno no existe\n");
+        sqlite3_close(db);
+        return;
+    }
+    //Preparar sentencia
+    char *sql_drop = "DELETE FROM Alumnos WHERE Id = ?;";
+    rc = sqlite3_prepare_v2(db,sql_drop,-1, &stmt,0 );
+    if(rc!=SQLITE_OK)
+    {
+        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    //Enlazar los valores 
+    sqlite3_bind_int(stmt,1,id);
+    // Ejecuta la sentencia deborrado
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) 
+    {
+        fprintf(stderr, "Ejecución fallida: %s\n", sqlite3_errmsg(db));
+    } else 
+    {
+        printf("Registro borrado exitosamente\n");
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+
+
+}
