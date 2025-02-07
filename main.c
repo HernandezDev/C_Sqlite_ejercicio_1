@@ -5,6 +5,7 @@
 
 int menu();
 int MenuEditar();
+void IniciarBase();
 float CargarNota();
 void CargarAlumno();
 void MostrarAlumno();
@@ -16,6 +17,7 @@ int main() {
     bool salir = false;
     int opcion;
     char respuesta[2];
+    IniciarBase();
     while (!salir)
     {
         opcion = menu();
@@ -95,35 +97,10 @@ int MenuEditar()
     return opcion;
 }
 
-float CargarNota()
+void IniciarBase()
 {
-    float Nota;
-    if(scanf("%f", &Nota)!=1||Nota<1||Nota>10)
-    {
-        printf("Entrada no válida. Por favor, ingrese un número válido\n");
-        // Limpiar el buffer de entrada
-        while (getchar() != '\n');
-        // Volver a pedir el número
-        Nota = CargarNota();
-    }
-    return Nota;
-}
-
-void CargarAlumno()
-{
-    int id;
-    char nombre[50];
     sqlite3 *db;
     char *err_msg = 0;
-    // Solicita los datos del alumno
-    printf("Nombre: ");
-    scanf("%s", nombre);
-    printf("Lengua: ");
-    float lengua = CargarNota();
-    printf("Matemáticas: ");
-    float matematicas = CargarNota();
-    printf("Ciencias: ");
-    float ciencias = CargarNota();
     // Abre la base de datos
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
@@ -163,6 +140,48 @@ void CargarAlumno()
     sqlite3_close(db);
     return;
     }
+    //serrar base de datos
+    sqlite3_close(db);
+}
+
+float CargarNota()
+{
+    float Nota;
+    if(scanf("%f", &Nota)!=1||Nota<1||Nota>10)
+    {
+        printf("Entrada no válida. Por favor, ingrese un número válido\n");
+        // Limpiar el buffer de entrada
+        while (getchar() != '\n');
+        // Volver a pedir el número
+        Nota = CargarNota();
+    }
+    return Nota;
+}
+
+void CargarAlumno()
+{
+    int id;
+    char nombre[50];
+    sqlite3 *db;
+    char *err_msg = 0;
+    // Solicita los datos del alumno
+    printf("Nombre: ");
+    scanf("%s", nombre);
+    printf("Lengua: ");
+    float lengua = CargarNota();
+    printf("Matemáticas: ");
+    float matematicas = CargarNota();
+    printf("Ciencias: ");
+    float ciencias = CargarNota();
+    // Abre la base de datos
+    int rc = sqlite3_open("Registro.db", &db);
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    
 
     // Prepara la sentencia SQL
     char *sql_insert = "INSERT INTO Alumnos(Nombre, Lengua, Matematicas, Ciencias) VALUES(?, ?, ?, ?);";
@@ -174,7 +193,7 @@ void CargarAlumno()
         sqlite3_close(db);
         return;
     }
-    // Enlaza los valores y verifica que no sean NULL
+    // Enlaza los valores 
     sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
     sqlite3_bind_double(stmt, 2, lengua);
     sqlite3_bind_double(stmt, 3, matematicas);
@@ -218,7 +237,7 @@ void MostrarAlumno()
     char nombre[50];
     printf("Nombre: ");
     scanf("%s", nombre);
-    // Enlaza los valores y verifica que no sean NULL
+    // Enlaza los valores 
     sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
     // Ejecuta la sentencia
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
@@ -340,7 +359,7 @@ void EditarAlumno()
                 sqlite3_close(db);
                 return;
             }
-            // Enlaza los valores y verifica que no sean NULL
+            // Enlaza los valores 
             sqlite3_bind_text(stmt, 1, NuevoNombre, -1, SQLITE_STATIC);
             sqlite3_bind_int(stmt, 2, id);
             break;
@@ -431,7 +450,7 @@ void BorrarAlumno()
         sqlite3_close(db);
         return;
     }
-    // Enlaza los valores y verifica que no sean NULL
+    // Enlaza los valores 
     sqlite3_bind_text(stmt, 1, Nombre, -1, SQLITE_STATIC);
     // Ejecuta la sentencia
     if ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
