@@ -7,7 +7,7 @@ int menu();
 int MenuEditar();
 void IniciarBase();
 float CargarNota();
-void DecimalExel(char numero[8],float decimal);
+void DecimalExel(char numero[12],float decimal);
 void CargarAlumno();
 void MostrarAlumno();
 void MejorPeor();
