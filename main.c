@@ -7,7 +7,7 @@ int menu();
 int MenuEditar();
 void IniciarBase();
 float CargarNota();
-void DecimalExel(char numero[12],float decimal);
+void DecimalExel(char numero[6],float decimal);
 void CargarAlumno();
 void MostrarAlumno();
 void MejorPeor();
@@ -160,11 +160,11 @@ float CargarNota()
     return Nota;
 }
 
-void DecimalExel(char numero[12], float decimal)
+void DecimalExel(char numero[6], float decimal)
 {
     int entero = (int)decimal;
     float resto = decimal - entero;
-    snprintf(numero, 12, "%d,%.0f", entero, resto*1000000);
+    snprintf(numero, 6, "%d,%.0f", entero, resto*100);
 }
 
 void CargarAlumno()
@@ -505,7 +505,10 @@ void ExportAlumnos()
     sqlite3 *db;
     sqlite3_stmt *stmt;
     FILE *fp;
-    char promedio[12];
+    char lengua[6];
+    char matematicas[6];
+    char ciencias[6];
+    char promedio[6];
     const char *sql = "SELECT Id, Nombre, Lengua, Matematicas, Ciencias, Promedio FROM Alumnos";
 
     // Abre la base de datos
@@ -539,13 +542,16 @@ void ExportAlumnos()
     // Ejecuta la consulta y escribe los datos en el archivo
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
+        DecimalExel(lengua,sqlite3_column_double(stmt, 2));
+        DecimalExel(matematicas,sqlite3_column_double(stmt, 3));
+        DecimalExel(ciencias,sqlite3_column_double(stmt, 4));
         DecimalExel(promedio,sqlite3_column_double(stmt, 5));
-        fprintf(fp, "%d;%s;%d;%d;%d;%s\n",
+        fprintf(fp, "%d;%s;%s;%s;%s;%s\n",
                 sqlite3_column_int(stmt, 0),
                 sqlite3_column_text(stmt, 1),
-                sqlite3_column_int(stmt, 2),
-                sqlite3_column_int(stmt, 3),
-                sqlite3_column_int(stmt, 4),
+                lengua,
+                matematicas,
+                ciencias,
                 promedio);
     }
 
