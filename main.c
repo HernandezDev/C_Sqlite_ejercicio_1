@@ -527,12 +527,12 @@ void ExportAlumnos()
     }
 
     // Escribe el encabezado del CSV
-    fprintf(fp, "Id,Nombre,Lengua,Matematicas,Ciencias,Promedio\n");
+    fprintf(fp, "Id;Nombre;Lengua;Matematicas;Ciencias;Promedio\n");
 
     // Ejecuta la consulta y escribe los datos en el archivo
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        fprintf(fp, "%d,%s,%d,%d,%d,%.2f\n",
+        fprintf(fp, "%d;%s;%d;%d;%d;%f\n",
                 sqlite3_column_int(stmt, 0),
                 sqlite3_column_text(stmt, 1),
                 sqlite3_column_int(stmt, 2),
