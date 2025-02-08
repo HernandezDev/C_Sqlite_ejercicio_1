@@ -1,70 +1,12 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include<stdbool.h>
 #include<string.h>
 #include<sqlite3.h>
 
-int menu();
-int MenuEditar();
-void IniciarBase();
-float CargarNota();
-void DecimalExel(char numero[6],float decimal);
-void CargarAlumno();
-void MostrarAlumno();
-void MejorPeor();
-void EditarAlumno();
-void BorrarAlumno();
-void ExportAlumnos();
-
-int main() {
-    bool salir = false;
-    int opcion;
-    char respuesta[2];
-    IniciarBase();
-    while (!salir)
-    {
-        opcion = menu();
-        switch (opcion)
-        {
-        case 1:
-            CargarAlumno();
-            break;
-        case 2:
-            MostrarAlumno();
-            break;
-        case 3:
-            MejorPeor();
-            break;
-        case 4:
-            EditarAlumno();
-            break;
-        case 5:
-            BorrarAlumno();
-            break;
-        case 6:
-            ExportAlumnos();
-            break;
-        case 7:
-            salir = true;
-            break;
-        default:
-            printf("Opción no válida\n");
-            break;
-        }
-        if (!salir)
-        {
-            printf("¿Otra acción? (s/n): ");
-            scanf("%s", respuesta);
-            if (strcasecmp(respuesta, "n") == 0)
-            {
-                salir = true;
-            }
-        }
-    }
-    return 0;
-}
-
 int menu()
 {
+    system("cls");
     int opcion;
     printf("1. Registrar notas de un alumno\n");
     printf("2. Mostrar notas y promedio de alumno\n");
@@ -74,28 +16,36 @@ int menu()
     printf("6. Guardar en archivo .csv\n");
     printf("7. Salir del programa\n");
     printf("Elije opción: ");
-    if(scanf("%d", &opcion)!=1)
+    if(scanf("%d", &opcion)!=1||opcion < 1 || opcion > 7)
     {
-        printf("Entrada no válida. Por favor, ingrese un número\n");
+        printf("Entrada no válida. Por favor, ingrese un número del 1 al 7\n");
         // Limpiar el buffer de entrada
         while (getchar() != '\n');
         // Volver a pedir el número
         opcion = menu();
     }
+    system("cls");
     return opcion;
 }
 
 int MenuEditar()
 {
+    system("cls");
     int opcion;
+    printf("1. Nombre\n");
+    printf("2. Lengua\n");
+    printf("3. Matemáticas\n");
+    printf("4. Ciencias\n");
+    printf("Editar:");
     if(scanf("%d", &opcion)!=1 ||opcion < 1 || opcion > 4)
     {
-        printf("Entrada no válida. Por favor, ingrese un número\n");
+        printf("Entrada no válida. Por favor, ingrese un número del 1 al 4 \n");
         // Limpiar el buffer de entrada
         while (getchar() != '\n');
         // Volver a pedir el número
         opcion = MenuEditar();
     }
+    system("cls");
     return opcion;
 }
 
@@ -348,7 +298,6 @@ void EditarAlumno()
         return;
     }
     // Pedir la Elemento a editar
-    printf("Editar: 1. Nombre 2. Lengua 3. Matemáticas 4. Ciencias\n");
     int opcion = MenuEditar(); 
     char *sql_update;
     float nuevaNota;
@@ -555,9 +504,57 @@ void ExportAlumnos()
                 ciencias,
                 promedio);
     }
-
+    printf("Guadado Alumnos.cvs\n");
     // Limpia y cierra
     sqlite3_finalize(stmt);
     fclose(fp);
     sqlite3_close(db);
+}
+
+int main() {
+    bool salir = false;
+    int opcion;
+    char respuesta[2];
+    IniciarBase();
+    while (!salir)
+    {
+        opcion = menu();
+        switch (opcion)
+        {
+        case 1:
+            CargarAlumno();
+            break;
+        case 2:
+            MostrarAlumno();
+            break;
+        case 3:
+            MejorPeor();
+            break;
+        case 4:
+            EditarAlumno();
+            break;
+        case 5:
+            BorrarAlumno();
+            break;
+        case 6:
+            ExportAlumnos();
+            break;
+        case 7:
+            salir = true;
+            break;
+        default:
+            printf("Opción no válida\n");
+            break;
+        }
+        if (!salir)
+        {
+            printf("¿Otra acción? (s/n): ");
+            scanf("%s", respuesta);
+            if (strcasecmp(respuesta, "n") == 0)
+            {
+                salir = true;
+            }
+        }
+    }
+    return 0;
 }
