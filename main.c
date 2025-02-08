@@ -162,6 +162,7 @@ float CargarNota()
 
 void DecimalExel(char numero[6], float decimal)
 {
+    //2 (parte entera) + 1 (coma) + 2 (decimales) + 1 (carácter nulo) = 6 (tamaño)
     int entero = (int)decimal;
     float resto = decimal - entero;
     snprintf(numero, 6, "%d,%.0f", entero, resto*100);
