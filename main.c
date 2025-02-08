@@ -4,13 +4,13 @@
 #include<string.h>
 #include<sqlite3.h>
 
-int menu()
+int Menu()
 {
     system("cls");
     int opcion;
     printf("1. Registrar notas de un alumno\n");
-    printf("2. Mostrar notas y promedio de alumno\n");
-    printf("3. Mejor y Peor promedio\n");
+    printf("2. Mostrar notas y promedio de un alumno\n");
+    printf("3. Ordenar Alumnos\n");
     printf("4. Editar  un alumno\n");    
     printf("5. Eliminar Alumno\n");
     printf("6. Guardar en archivo .csv\n");
@@ -22,7 +22,7 @@ int menu()
         // Limpiar el buffer de entrada
         while (getchar() != '\n');
         // Volver a pedir el número
-        opcion = menu();
+        opcion = Menu();
     }
     system("cls");
     return opcion;
@@ -44,6 +44,25 @@ int MenuEditar()
         while (getchar() != '\n');
         // Volver a pedir el número
         opcion = MenuEditar();
+    }
+    system("cls");
+    return opcion;
+}
+int MenuOrdenar()
+{
+    system("cls");
+    int opcion;
+    printf("1. Alfabéticamente\n");
+    printf("2. Descendente\n");
+    printf("3. Ascendente\n");
+    printf("Editar:");
+    if(scanf("%d", &opcion)!=1 ||opcion < 1 || opcion > 3)
+    {
+        printf("Entrada no válida. Por favor, ingrese un número del 1 al 3 \n");
+        // Limpiar el buffer de entrada
+        while (getchar() != '\n');
+        // Volver a pedir el número
+        opcion = MenuOrdenar();
     }
     system("cls");
     return opcion;
@@ -211,10 +230,11 @@ void MostrarAlumno()
     }
 }
 
-void MejorPeor()
+void OrdenarAlumno()
 {
     sqlite3 *db;
     sqlite3_stmt *stmt;
+    int opcion;
     // Abre la base de datos
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
@@ -223,34 +243,34 @@ void MejorPeor()
         sqlite3_close(db);
         return;
     }
-    // Prepara la sentencia
-    char *sql_select = "SELECT Nombre, Promedio FROM Alumnos WHERE Promedio = (SELECT MAX(Promedio) FROM Alumnos)";
-    rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
-    if (rc != SQLITE_OK) 
+    opcion=MenuOrdenar();
+    switch (opcion)
     {
-        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return;
-    }
-    // Ejecuta la sentencia
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
-    {
-        printf("Mejor promedio: %s %.2f\n", sqlite3_column_text(stmt, 0), sqlite3_column_double(stmt, 1));
-    } 
-    sqlite3_finalize(stmt);
-    // Prepara la sentencia
-    sql_select = "SELECT Nombre, Promedio FROM Alumnos WHERE Promedio = (SELECT MIN(Promedio) FROM Alumnos)";
-    rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
-    if (rc != SQLITE_OK) 
-    {
-        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return;
-    }
-    // Ejecuta la sentencia
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
-    {
-        printf("Peor promedio: %s %.2f\n", sqlite3_column_text(stmt, 0), sqlite3_column_double(stmt, 1));
+        case 1:
+            char *sql_select="SELECT Lengua, Matematicas, Ciencias, Promedio, Nombre FROM Alumnos ORDER BY Nombre";
+            rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
+            if (rc != SQLITE_OK) 
+            {
+            fprintf(stderr, "Fallo en la preparación de la sentencia SQL: %s\n", sqlite3_errmsg(db));
+            sqlite3_close(db);
+            return;
+            }
+            printf("Lengua\tMatem\tCienci\tNombre\n");
+            while (sqlite3_step(stmt) == SQLITE_ROW)
+            {
+                printf("%.2F\t%.2F\t%.2F\t%s\n",
+                    sqlite3_column_double(stmt, 0),
+                    sqlite3_column_double(stmt, 1),
+                    sqlite3_column_double(stmt, 2),
+                    sqlite3_column_text(stmt, 4));
+            }
+            break;
+        case 2:
+            /* code */
+            break;
+        case 3:
+            /* code */
+            break;
     }
     sqlite3_finalize(stmt);
     sqlite3_close(db);
@@ -518,7 +538,7 @@ int main() {
     IniciarBase();
     while (!salir)
     {
-        opcion = menu();
+        opcion = Menu();
         switch (opcion)
         {
         case 1:
@@ -528,7 +548,7 @@ int main() {
             MostrarAlumno();
             break;
         case 3:
-            MejorPeor();
+            OrdenarAlumno();
             break;
         case 4:
             EditarAlumno();
