@@ -3,9 +3,6 @@
 #include<string.h>
 #include<sqlite3.h>
 
-
-
-
 int menu();
 int MenuEditar();
 void IniciarBase();
