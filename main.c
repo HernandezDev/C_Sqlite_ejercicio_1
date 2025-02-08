@@ -4,6 +4,7 @@
 #include<sqlite3.h>
 
 
+
 int menu();
 int MenuEditar();
 void IniciarBase();
@@ -71,7 +72,7 @@ int menu()
     printf("3. Mejor y Peor promedio\n");
     printf("4. Editar  un alumno\n");    
     printf("5. Eliminar Alumno\n");
-    printf("6. Guardar en archivo .json\n");
+    printf("6. Guardar en archivo .csv\n");
     printf("7. Salir del programa\n");
     printf("Elije opción: ");
     if(scanf("%d", &opcion)!=1)
@@ -498,8 +499,7 @@ void ExportAlumnos()
     sqlite3 *db;
     sqlite3_stmt *stmt;
     FILE *fp;
-    char *err_msg = 0;
-    const char *sql = "SELECT json_group_array(json_object('Id', Id, 'Nombre', Nombre, 'Lengua', Lengua, 'Matematicas', Matematicas, 'Ciencias', Ciencias, 'Promedio', Promedio)) FROM Alumnos";
+    const char *sql = "SELECT Id, Nombre, Lengua, Matematicas, Ciencias, Promedio FROM Alumnos";
 
     // Abre la base de datos
     if (sqlite3_open("Registro.db", &db))
@@ -517,20 +517,28 @@ void ExportAlumnos()
     }
 
     // Abre el archivo de salida
-    fp = fopen("Alumnos.json", "w");
+    fp = fopen("Alumnos.csv", "w");
     if (!fp)
     {
-        fprintf(stderr, "No se puede abrir el archivo: Alumnos.json\n");
+        fprintf(stderr, "No se puede abrir el archivo: Alumnos.csv\n");
         sqlite3_finalize(stmt);
         sqlite3_close(db);
         return;
     }
 
+    // Escribe el encabezado del CSV
+    fprintf(fp, "Id,Nombre,Lengua,Matematicas,Ciencias,Promedio\n");
+
     // Ejecuta la consulta y escribe los datos en el archivo
-    if (sqlite3_step(stmt) == SQLITE_ROW)
+    while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        const char *json_data = (const char *)sqlite3_column_text(stmt, 0);
-        fprintf(fp, "%s\n", json_data ? json_data : "[]");
+        fprintf(fp, "%d,%s,%d,%d,%d,%.2f\n",
+                sqlite3_column_int(stmt, 0),
+                sqlite3_column_text(stmt, 1),
+                sqlite3_column_int(stmt, 2),
+                sqlite3_column_int(stmt, 3),
+                sqlite3_column_int(stmt, 4),
+                sqlite3_column_double(stmt, 5));
     }
 
     // Limpia y cierra
