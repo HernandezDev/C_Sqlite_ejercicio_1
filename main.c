@@ -141,6 +141,7 @@ void CargarAlumno()
 {
     int id;
     char nombre[50];
+    char respuesta[2];
     sqlite3 *db;
     char *err_msg = 0;
     // Solicita los datos del alumno
@@ -189,6 +190,13 @@ void CargarAlumno()
 
     sqlite3_finalize(stmt);
     sqlite3_close(db);
+    printf("cargar otro alumo?(s/n)");
+    scanf("%s", respuesta);
+            if (strcasecmp(respuesta, "s") == 0)
+            {
+                system("cls");
+                CargarAlumno();
+            }
 }
 
 void MostrarAlumno()
@@ -238,6 +246,7 @@ void OrdenarAlumno()
     sqlite3 *db;
     sqlite3_stmt *stmt;
     int opcion;
+    char respuesta[2];
     // Abre la base de datos
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
@@ -281,6 +290,13 @@ void OrdenarAlumno()
             }
     sqlite3_finalize(stmt);
     sqlite3_close(db);
+    printf("Cambiar el orden?(s/n)");
+    scanf("%s", respuesta);
+            if (strcasecmp(respuesta, "s") == 0)
+            {
+                system("cls");
+                OrdenarAlumno();
+            }
 }
 
 void EditarAlumno()
