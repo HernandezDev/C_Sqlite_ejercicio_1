@@ -55,7 +55,7 @@ int MenuOrdenar()
     printf("1. Alfabéticamente\n");
     printf("2. Descendente\n");
     printf("3. Ascendente\n");
-    printf("Editar:");
+    printf("Ordenar:");
     if(scanf("%d", &opcion)!=1 ||opcion < 1 || opcion > 3)
     {
         printf("Entrada no válida. Por favor, ingrese un número del 1 al 3 \n");
@@ -247,31 +247,35 @@ void OrdenarAlumno()
     switch (opcion)
     {
         case 1:
-            char *sql_select="SELECT Lengua, Matematicas, Ciencias, Promedio, Nombre FROM Alumnos ORDER BY Nombre";
-            rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
-            if (rc != SQLITE_OK) 
-            {
-            fprintf(stderr, "Fallo en la preparación de la sentencia SQL: %s\n", sqlite3_errmsg(db));
-            sqlite3_close(db);
-            return;
-            }
-            printf("Lengua\tMatem\tCienci\tNombre\n");
+            char *sql_select_nom="SELECT Lengua, Matematicas, Ciencias, Promedio, Nombre FROM Alumnos ORDER BY Nombre";
+            rc = sqlite3_prepare_v2(db, sql_select_nom, -1, &stmt, 0);
+            break;
+        case 2:
+            char *sql_select_desc="SELECT Lengua, Matematicas, Ciencias, Promedio, Nombre FROM Alumnos ORDER BY Promedio DESC";
+            rc = sqlite3_prepare_v2(db, sql_select_desc, -1, &stmt, 0);
+            break;
+        case 3:
+            char *sql_select_asc="SELECT Lengua, Matematicas, Ciencias, Promedio, Nombre FROM Alumnos ORDER BY Promedio ASC";
+            rc = sqlite3_prepare_v2(db, sql_select_asc, -1, &stmt, 0);
+            break;
+    }
+    
+    if (rc != SQLITE_OK) 
+    {
+        fprintf(stderr, "Fallo en la preparación de la sentencia SQL: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    printf("Lengua\tMatem\tCienci\tProm\tNombre\n");
             while (sqlite3_step(stmt) == SQLITE_ROW)
             {
-                printf("%.2F\t%.2F\t%.2F\t%s\n",
+                printf("%.2F\t%.2F\t%.2F\t%.2F\t%s\n",
                     sqlite3_column_double(stmt, 0),
                     sqlite3_column_double(stmt, 1),
                     sqlite3_column_double(stmt, 2),
+                    sqlite3_column_double(stmt, 3),
                     sqlite3_column_text(stmt, 4));
             }
-            break;
-        case 2:
-            /* code */
-            break;
-        case 3:
-            /* code */
-            break;
-    }
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
