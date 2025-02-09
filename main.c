@@ -204,7 +204,7 @@ void MostrarAlumno()
         return;
     }
     // Prepara la sentencia SQL
-    char *sql_select = "SELECT Nombre, Lengua, Matematicas, Ciencias, Promedio FROM Alumnos WHERE Nombre = ?;";
+    char *sql_select = "SELECT Lengua, Matematicas, Ciencias, Promedio, Nombre FROM Alumnos WHERE Nombre = ?;";
     rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
     if (rc != SQLITE_OK) 
     {
@@ -219,15 +219,18 @@ void MostrarAlumno()
     // Enlaza los valores 
     sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
     // Ejecuta la sentencia
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
-    {
-        printf("Nombre: %s\n", sqlite3_column_text(stmt, 0));
-        printf("Lengua: %.2f\n", sqlite3_column_double(stmt, 1));
-        printf("Matemáticas: %.2f\n", sqlite3_column_double(stmt, 2));
-        printf("Ciencias: %.2f\n", sqlite3_column_double(stmt, 3));
-        printf("Promedio: %.2f\n", sqlite3_column_double(stmt, 4));
-        printf("\n");
-    }
+    printf("Lengua\tMatem\tCienci\tProm\tNombre\n");
+            while (sqlite3_step(stmt) == SQLITE_ROW)
+            {
+                printf("%.2F\t%.2F\t%.2F\t%.2F\t%s\n",
+                    sqlite3_column_double(stmt, 0),
+                    sqlite3_column_double(stmt, 1),
+                    sqlite3_column_double(stmt, 2),
+                    sqlite3_column_double(stmt, 3),
+                    sqlite3_column_text(stmt, 4));
+            }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
 }
 
 void OrdenarAlumno()
