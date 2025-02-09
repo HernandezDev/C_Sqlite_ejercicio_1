@@ -203,6 +203,8 @@ void MostrarAlumno()
 {
     sqlite3 *db;
     sqlite3_stmt *stmt;
+    char nombre[50];
+    int Id=0;
     // Abre la base de datos
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
@@ -212,7 +214,7 @@ void MostrarAlumno()
         return;
     }
     // Prepara la sentencia SQL
-    char *sql_select = "SELECT Lengua, Matematicas, Ciencias, Promedio, Nombre FROM Alumnos WHERE Nombre = ?;";
+    char *sql_select = "SELECT Id, Lengua, Matematicas, Ciencias, Promedio, Nombre FROM Alumnos WHERE Nombre = ?;";
     rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
     if (rc != SQLITE_OK) 
     {
@@ -221,22 +223,27 @@ void MostrarAlumno()
         return;
     }
     // Solicita el nombre del alumno
-    char nombre[50];
     printf("Nombre: ");
     scanf("%s", nombre);
     // Enlaza los valores 
     sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
     // Ejecuta la sentencia
-    printf("Lengua\tMatem\tCienci\tProm\tNombre\n");
-            while (sqlite3_step(stmt) == SQLITE_ROW)
-            {
-                printf("%.2F\t%.2F\t%.2F\t%.2F\t%s\n",
-                    sqlite3_column_double(stmt, 0),
-                    sqlite3_column_double(stmt, 1),
-                    sqlite3_column_double(stmt, 2),
-                    sqlite3_column_double(stmt, 3),
-                    sqlite3_column_text(stmt, 4));
+    
+    while(sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        Id=sqlite3_column_int(stmt, 0);
+        printf("Lengua\tMatem\tCienci\tProm\tNombre\n");
+        printf("%.2F\t%.2F\t%.2F\t%.2F\t%s\n",
+            sqlite3_column_double(stmt, 1),
+            sqlite3_column_double(stmt, 2),
+            sqlite3_column_double(stmt, 3),
+            sqlite3_column_double(stmt, 4),
+            sqlite3_column_text(stmt, 5));
             }
+    if (Id==0)
+    {
+        printf("Alumno no encontrado\n");
+    }
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
