@@ -28,14 +28,14 @@ int Menu()
     return opcion;
 }
 
-int MenuEditar()
+int MenuEditar(char Nombre[],float Lengua,float Matematica,float Ciencia)
 {
     system("cls");
     int opcion;
-    printf("1. Nombre\n");
-    printf("2. Lengua\n");
-    printf("3. Matemáticas\n");
-    printf("4. Ciencias\n");
+    printf("1. Nombre\t%s\n",Nombre);
+    printf("2. Lengua\t%.2f\n",Lengua);
+    printf("3. Matemáticas\t%.2f\n",Matematica);
+    printf("4. Ciencias\t%.2f\n",Ciencia);
     printf("Editar:");
     if(scanf("%d", &opcion)!=1 ||opcion < 1 || opcion > 4)
     {
@@ -43,7 +43,7 @@ int MenuEditar()
         // Limpiar el buffer de entrada
         while (getchar() != '\n');
         // Volver a pedir el número
-        opcion = MenuEditar();
+        opcion = MenuEditar(Nombre,Lengua,Matematica,Ciencia);
     }
     system("cls");
     return opcion;
@@ -141,6 +141,7 @@ void CargarAlumno()
 {
     int id;
     char nombre[50];
+    char respuesta[2];
     sqlite3 *db;
     char *err_msg = 0;
     // Solicita los datos del alumno
@@ -189,6 +190,13 @@ void CargarAlumno()
 
     sqlite3_finalize(stmt);
     sqlite3_close(db);
+    printf("cargar otro alumo?(s/n)");
+    scanf("%s", respuesta);
+            if (strcasecmp(respuesta, "s") == 0)
+            {
+                system("cls");
+                CargarAlumno();
+            }
 }
 
 void MostrarAlumno()
@@ -238,6 +246,7 @@ void OrdenarAlumno()
     sqlite3 *db;
     sqlite3_stmt *stmt;
     int opcion;
+    char respuesta[2];
     // Abre la base de datos
     int rc = sqlite3_open("Registro.db", &db);
     if (rc != SQLITE_OK) 
@@ -281,6 +290,13 @@ void OrdenarAlumno()
             }
     sqlite3_finalize(stmt);
     sqlite3_close(db);
+    printf("Cambiar el orden?(s/n)");
+    scanf("%s", respuesta);
+            if (strcasecmp(respuesta, "s") == 0)
+            {
+                system("cls");
+                OrdenarAlumno();
+            }
 }
 
 void EditarAlumno()
@@ -288,6 +304,9 @@ void EditarAlumno()
     sqlite3 *db;
     sqlite3_stmt *stmt;
     char Nombre[50];
+    float Lengua;
+    float Matematica;
+    float Ciencia;
     int id = 0;
     // Abre la base de datos
     int rc = sqlite3_open("Registro.db", &db);
@@ -301,7 +320,7 @@ void EditarAlumno()
     printf("Nombre: ");
     scanf("%s", Nombre);
     // Prepara la sentencia
-    char *sql_select = "SELECT id FROM Alumnos WHERE Nombre = ?;";
+    char *sql_select = "SELECT id, Nombre, Lengua, Matematicas, Ciencias FROM Alumnos WHERE Nombre = ?;";
     rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
     if (rc != SQLITE_OK) 
     {
@@ -315,6 +334,9 @@ void EditarAlumno()
     if ((rc = sqlite3_step(stmt)) == SQLITE_ROW) 
     {
         id = sqlite3_column_int(stmt, 0);
+        Lengua = sqlite3_column_double(stmt, 2);
+        Matematica = sqlite3_column_double(stmt, 3);
+        Ciencia = sqlite3_column_double(stmt, 4);
     }
     sqlite3_finalize(stmt);
     //Comprobar si el alumno existe
@@ -325,7 +347,7 @@ void EditarAlumno()
         return;
     }
     // Pedir la Elemento a editar
-    int opcion = MenuEditar(); 
+    int opcion = MenuEditar(Nombre,Lengua,Matematica,Ciencia); 
     char *sql_update;
     float nuevaNota;
 
@@ -394,7 +416,6 @@ void EditarAlumno()
             sqlite3_bind_double(stmt, 1, nuevaNota);
             sqlite3_bind_int(stmt, 2, id);
             break;
-        
     }
 
     // Ejecuta la sentencia de actualización
