@@ -139,64 +139,95 @@ void DecimalExel(char numero[6], float decimal)
 
 void CargarAlumno()
 {
-    int id;
     char nombre[50];
     char respuesta[2];
     sqlite3 *db;
-    char *err_msg = 0;
+    sqlite3_stmt *stmt;
+    int rc;
+
+    // Abre la base de datos
+    rc = sqlite3_open("Registro.db", &db);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
     // Solicita los datos del alumno
     printf("Nombre: ");
     scanf("%s", nombre);
+
+    // Prepara la sentencia para verificar si el alumno ya existe
+    char *sql_select = "SELECT id FROM Alumnos WHERE Nombre = ?;";
+    rc = sqlite3_prepare_v2(db, sql_select, -1, &stmt, 0);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+
+    // Enlaza los valores
+    sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
+
+    // Ejecuta la sentencia
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW)
+    {
+        printf("El alumno ya existe\n");
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return;
+    }
+
+    sqlite3_finalize(stmt);
+
+    // El alumno no existe, proceder con la inserción
     printf("Lengua: ");
     float lengua = CargarNota();
     printf("Matemáticas: ");
     float matematicas = CargarNota();
     printf("Ciencias: ");
     float ciencias = CargarNota();
-    // Abre la base de datos
-    int rc = sqlite3_open("Registro.db", &db);
-    if (rc != SQLITE_OK) 
-    {
-        fprintf(stderr, "No se puede abrir la base de datos: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return;
-    }
-    
 
-    // Prepara la sentencia SQL
+    // Prepara la sentencia SQL para insertar el nuevo alumno
     char *sql_insert = "INSERT INTO Alumnos(Nombre, Lengua, Matematicas, Ciencias) VALUES(?, ?, ?, ?);";
-    sqlite3_stmt *stmt;
     rc = sqlite3_prepare_v2(db, sql_insert, -1, &stmt, 0);
-    if (rc != SQLITE_OK) 
+    if (rc != SQLITE_OK)
     {
         fprintf(stderr, "No se pudo preparar la sentencia: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
-    // Enlaza los valores 
+
+    // Enlaza los valores
     sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
     sqlite3_bind_double(stmt, 2, lengua);
     sqlite3_bind_double(stmt, 3, matematicas);
     sqlite3_bind_double(stmt, 4, ciencias);
+
     // Ejecuta la sentencia
     rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) 
+    if (rc != SQLITE_DONE)
     {
         fprintf(stderr, "Ejecución fallida: %s\n", sqlite3_errmsg(db));
-    } else 
+    }
+    else
     {
         printf("Registro insertado exitosamente\n");
     }
 
     sqlite3_finalize(stmt);
     sqlite3_close(db);
-    printf("cargar otro alumo?(s/n)");
+
+    printf("¿Cargar otro alumno? (s/n): ");
     scanf("%s", respuesta);
-            if (strcasecmp(respuesta, "s") == 0)
-            {
-                system("cls");
-                CargarAlumno();
-            }
+    if (strcasecmp(respuesta, "s") == 0)
+    {
+        system("cls");
+        CargarAlumno();
+    }
 }
 
 void MostrarAlumno()
